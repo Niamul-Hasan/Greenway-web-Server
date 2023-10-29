@@ -24,12 +24,56 @@ const client = new MongoClient(uri, {
 });
 
 
+//JWT verify function
+const verifyJwt=(req,res,next)=>{
+  const authHeader=req.headers.authorization;
+  if(!authHeader){
+    return res.status(401).send({message:'UnAuthorized Access'});
+  }
+  const token=authHeader.split(' ')[1];
+  jwt.verify(token,process.env.ACCESS_TOKEN, function(err, decoded) {
+    if(err){
+      return res.status(403).send({message:'Forbidden Access'});
+    }
+    req.decoded=decoded;
+     next();
+  });
+}
+
 
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     client.connect();
+    const userCollection = client.db("Green_DB").collection('users');
    
+    //Api for upsert login data into user db
+    app.put("/Tuser/:email",async(req,res)=>{
+      const email=req.params.email;
+      const filter={email:email};
+      const options={upsert:true};
+      const user=req.body;
+      console.log(user);
+      const updateDoc = {
+        $set: user
+      };
+      const result= await userCollection.updateOne(filter,updateDoc,options);
+      const token = jwt.sign({email:email},process.env.ACCESS_TOKEN,{ expiresIn: '7d' });
+      res.send({result,token});
+    });
+    app.put("/Stduser/:phoneNumber",async(req,res)=>{
+      const phoneNumber=req.params.phoneNumber;
+      const filter={phoneNumber:phoneNumber};
+      const options={upsert:true};
+      const user=req.body;
+      console.log(user);
+      const updateDoc = {
+        $set: user
+      };
+      const result= await userCollection.updateOne(filter,updateDoc,options);
+      const token = jwt.sign({phoneNumber:phoneNumber},process.env.ACCESS_TOKEN,{ expiresIn: '7d' });
+      res.send({result,token});
+    });
 
 
     app.get("/get",(req,res)=>{
