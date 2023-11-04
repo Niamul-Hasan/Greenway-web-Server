@@ -69,7 +69,6 @@ async function run() {
    
    app.get('/stdInfo/:number',async(req,res)=>{
     const primaryContact=req.params.number;
-    console.log(primaryContact);
     const query={primaryContact:primaryContact};
     const availableData= await stdInfoCollection.find(query).toArray();
     res.send(availableData);
