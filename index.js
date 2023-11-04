@@ -46,14 +46,40 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     client.connect();
     const userCollection = client.db("Green_DB").collection('users');
+    const stdInfoCollection = client.db("Green_DB").collection('StdInfo');
+
+
+
+   //Api for inserting student Info into DB
+   app.post("/StdInfo", async(req,res)=>{
+            const StudentInfo=req.body;
+            const Info=await stdInfoCollection.insertOne(StudentInfo);
+            res.send(Info);
+   });
+
+
+
+   //Api for geting all students info
+   app.get("/stdInfo",async(req,res)=>{
+     const filter={};
+     const stdData= await stdInfoCollection.find(filter).toArray();
+     res.send(stdData);
+   })
+
    
+   app.get('/stdInfo/:number',async(req,res)=>{
+    const primaryContact=req.params.number;
+    console.log(primaryContact);
+    const query={primaryContact:primaryContact};
+    const availableData= await stdInfoCollection.find(query).toArray();
+    res.send(availableData);
+  });
     //Api for upsert login data into user db
     app.put("/Tuser/:email",async(req,res)=>{
       const email=req.params.email;
       const filter={email:email};
       const options={upsert:true};
       const user=req.body;
-      console.log(user);
       const updateDoc = {
         $set: user
       };
@@ -66,7 +92,6 @@ async function run() {
       const filter={phoneNumber:phoneNumber};
       const options={upsert:true};
       const user=req.body;
-      console.log(user);
       const updateDoc = {
         $set: user
       };
